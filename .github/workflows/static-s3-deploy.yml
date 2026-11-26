@@ -1,22 +1,45 @@
-name: Deploy html to s3
-on: push
+
+name: Deploy HTML Website to S3
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   deploy:
-   runs-on: ubuntu-latest
-   steps:
-      - name: checkout code from repo
-        uses: actions/checkout@v6.1.0
-      - name: configure aws credentials  
-        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code from repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.EC2_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.EC2_SECRET_KEY }}
           aws-region: us-east-1
 
-      - name: Code static code to S3
+      - name: Verify AWS credentials
+        run: aws sts get-caller-identity
+
+      - name: Configure S3 static website hosting
         run: |
-          aws s3 sync ./ s3://dd-mt/ \
-            --exclude "*" \
-            --include "index.html" 
-            
-      
+          aws s3 website s3://dd-mt/ \
+            --index-document index.html
+
+      - name: Verify website file exists
+        run: test -f index.html
+
+      - name: Deploy HTML to S3
+        run: |
+          aws s3 cp index.html s3://dd-mt/index.html \
+            --content-type "text/html"
+
+      - name: Deployment completed
+        run: echo "Website deployed to S3 successfully"
