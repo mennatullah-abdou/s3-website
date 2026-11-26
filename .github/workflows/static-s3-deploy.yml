@@ -12,5 +12,11 @@ jobs:
           aws-access-key-id: ${{ secrets.EC2_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.EC2_SECRET_KEY }}
           aws-region: us-east-1
-                
+
+      - name: Code static code to S3
+        run: |
+          aws s3 sync ./ s3://dd-mt/ \
+            --exclude "*" \
+            --include "index.html" 
+            
       
